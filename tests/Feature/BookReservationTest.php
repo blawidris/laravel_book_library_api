@@ -17,8 +17,6 @@ class BookReservationTest extends TestCase
      */
     public function test_add_book_to_the_library_collection(): void
     {
-        $this->withoutExceptionHandling();
-
         $response = $this->post('/books', [
             'title' => 'Atomic Habit',
             'author' => 'Kendrick Arnold'
@@ -27,11 +25,12 @@ class BookReservationTest extends TestCase
         $response->assertStatus(201);
 
         $this->assertCount(1, Book::all());
+
+        // $response->assertRedirect('/books/'. $response['id']);
     }
 
     public function test_is_title_required()
     {
-        $this->withoutExceptionHandling();
 
         $response = $this->post('/books', [
             'title' => '',
@@ -43,7 +42,6 @@ class BookReservationTest extends TestCase
 
     public function test_is_author_required()
     {
-        $this->withoutExceptionHandling();
 
         $response = $this->post('/books', [
             'title' => 'Rich Dad Poor Dad',
@@ -55,7 +53,7 @@ class BookReservationTest extends TestCase
 
     public function test_update_book_in_library_collection()
     {
-        $this->withoutExceptionHandling();
+        // $this->withoutExceptionHandling();
 
         $storeNewBook = $this->post('/books', [
             'title' => 'New Book',
@@ -64,12 +62,29 @@ class BookReservationTest extends TestCase
 
 
 
-        $response = $this->patch("/books/{$storeNewBook['id']}",[
+        $response = $this->patch("/books/{$storeNewBook['id']}", [
             'title' => 'Rich Dad Poor Dad',
             'author' => 'Robert K'
         ]);
 
         $this->assertEquals('Rich Dad Poor Dad', $response['title']);
         $this->assertEquals('Robert K', $response['author']);
+
+        // $response->assertRedirect('/books/'.$response['id']);
+    }
+
+    public function test_book_can_be_deleted()
+    {
+
+        $storeNewBook = $this->post('/books', [
+            'title' => 'Lemanord',
+            'author' => 'Kendrick Arnold'
+        ]);
+
+        $response = $this->delete("/books/{$storeNewBook['id']}");
+
+        $this->assertCount(0, Book::all());
+
+        $response->assertRedirect('/books');
     }
 }
