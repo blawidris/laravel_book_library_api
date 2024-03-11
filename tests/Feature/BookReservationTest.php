@@ -87,4 +87,7 @@ class BookReservationTest extends TestCase
 
         $response->assertRedirect('/books');
     }
+
+
+    public function test_a_new_author_is_automatically_added(){}
 }
