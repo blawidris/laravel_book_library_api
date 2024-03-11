@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Author;
 use App\Models\Book;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -67,8 +68,10 @@ class BookReservationTest extends TestCase
             'author' => 'Robert K'
         ]);
 
+        // dd($response);
+
         $this->assertEquals('Rich Dad Poor Dad', $response['title']);
-        $this->assertEquals('Robert K', $response['author']);
+        $this->assertEquals('Robert K', $response['author']['name']);
 
         // $response->assertRedirect('/books/'.$response['id']);
     }
@@ -89,5 +92,21 @@ class BookReservationTest extends TestCase
     }
 
 
-    public function test_a_new_author_is_automatically_added(){}
+    public function test_a_new_author_is_automatically_added()
+    {
+
+        $this->withoutExceptionHandling();
+
+        $storeNewBook = $this->post('/books', [
+            'title' => 'Riches man in Babylon',
+            'author' => 'Arnold'
+        ]);
+
+
+        $author = Author::first();
+
+
+        $this->assertCount(1, Author::all());
+        $this->assertEquals($author->id, $storeNewBook['author_id']);
+    }
 }
