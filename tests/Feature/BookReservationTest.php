@@ -109,4 +109,6 @@ class BookReservationTest extends TestCase
         $this->assertCount(1, Author::all());
         $this->assertEquals($author->id, $storeNewBook['author_id']);
     }
+
+    public function test_book_checkout(){}
 }

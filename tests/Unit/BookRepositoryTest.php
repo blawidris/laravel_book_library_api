@@ -45,6 +45,11 @@ class BookRepositoryTest extends TestCase
         $this->assertTrue($deleted, 'result was not deleted');
     }
 
+    public function test_checkout_book()
+    {
+        
+    }
+
     private function payload()
     {
         return [
@@ -52,4 +57,5 @@ class BookRepositoryTest extends TestCase
             'author' => 'John',
         ];
     }
+
 }
