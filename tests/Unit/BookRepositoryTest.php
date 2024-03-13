@@ -4,6 +4,10 @@ namespace Tests\Unit;
 
 // use PHPUnit\Framework\TestCase;
 
+use App\Models\Author;
+use App\Models\Book;
+use App\Models\Reservation;
+use App\Models\User;
 use App\Repositories\BookRepository;
 use Tests\TestCase;
 
@@ -47,7 +51,14 @@ class BookRepositoryTest extends TestCase
 
     public function test_checkout_book()
     {
-        
+        $book = Book::factory(1)->create();
+        $user = User::factory(1)->create();
+
+        $book->checkout($user);
+
+        $this->assertCount(1, Reservation::all());
+        $this->assertEquals($book->id, Reservation::first()->book_id);
+        $this->assertEquals($user->id, Reservation::first()->user_id);
     }
 
     private function payload()
@@ -57,5 +68,4 @@ class BookRepositoryTest extends TestCase
             'author' => 'John',
         ];
     }
-
 }
