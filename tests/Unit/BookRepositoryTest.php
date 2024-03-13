@@ -9,11 +9,14 @@ use App\Models\Book;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Repositories\BookRepository;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class BookRepositoryTest extends TestCase
 {
-    public function test_create()
+    use RefreshDatabase;
+
+    public function test_create_book()
     {
         $repository = $this->app->make(BookRepository::class);
 
@@ -21,7 +24,7 @@ class BookRepositoryTest extends TestCase
         $result = $repository->create($this->payload());
         $this->assertSame($this->payload()['title'], $result['title'], 'Created book does not match');
     }
-    public function test_update()
+    public function test_update_book()
     {
         $repository = $this->app->make(BookRepository::class);
 
@@ -37,7 +40,7 @@ class BookRepositoryTest extends TestCase
 
         $this->assertSame($newPayload['title'], $updateResult['title'], 'Updated book does not match');
     }
-    public function test_delete()
+    public function test_delete_book()
     {
         // create a new book
         $repository = $this->app->make(BookRepository::class);
@@ -51,14 +54,81 @@ class BookRepositoryTest extends TestCase
 
     public function test_checkout_book()
     {
-        $book = Book::factory(1)->create();
-        $user = User::factory(1)->create();
+        $this->factory();
 
-        $book->checkout($user);
+        $book = Book::first();
+        $user = User::first();
+
+        // dd($book, $user);
+
+        $repository = $this->app->make(BookRepository::class);
+        $result = $repository->checkout($book, $user);
 
         $this->assertCount(1, Reservation::all());
-        $this->assertEquals($book->id, Reservation::first()->book_id);
-        $this->assertEquals($user->id, Reservation::first()->user_id);
+        $this->assertEquals($book->id, $result->book_id);
+        $this->assertEquals($user->id, $result->user_id);
+    }
+
+    public function test_checkin_book()
+    {
+        $this->factory();
+
+        $book = Book::first();
+        $user = User::first();
+
+        // checkout book
+        $repository = $this->app->make(BookRepository::class);
+        $result = $repository->checkout($book, $user);
+
+        $this->assertCount(1, Reservation::all());
+        $this->assertEquals($book->id, $result->book_id);
+        $this->assertEquals($user->id, $result->user_id);
+
+        // checkin book
+        $checkin =(bool) $repository->checkin($book, $user);
+        $this->assertTrue($checkin, 'Book Checkin failed ');
+    }
+
+    public function test_checkout_a_book_twice(){
+        $this->factory();
+
+        $book = Book::first();
+        $user = User::first();
+
+        // checkout book
+        $repository = $this->app->make(BookRepository::class);
+        $result = $repository->checkout($book, $user);
+
+        $this->assertCount(1, Reservation::all());
+        $this->assertEquals($book->id, $result->book_id);
+        $this->assertEquals($user->id, $result->user_id);
+
+        // checkin book
+        $checkin =(bool) $repository->checkin($book, $user);
+        $this->assertTrue($checkin, 'Book Checkin failed ');
+
+         // checkout book
+         $repository = $this->app->make(BookRepository::class);
+         $newCheckout = $repository->checkout($book, $user);
+ 
+         $this->assertCount(2, Reservation::all());
+         $this->assertEquals($book->id, $newCheckout->book_id);
+         $this->assertEquals($user->id, $newCheckout->user_id);
+    }
+
+    public function test_throw_exception_when_checkout_is_not_found()
+    {
+        $this->expectException(\Exception::class);
+
+        $this->factory();
+
+        $book = Book::first();
+        $user = User::first();
+
+        $repository = $this->app->make(BookRepository::class);
+        $checkin =(bool) $repository->checkin($book, $user);
+        $this->assertNotTrue(!$checkin, 'Book Checkin failed ');
+        
     }
 
     private function payload()
@@ -67,5 +137,11 @@ class BookRepositoryTest extends TestCase
             'title' => 'Mr/Mrs Smith',
             'author' => 'John',
         ];
+    }
+
+    private function factory()
+    {
+        Book::factory(1)->create();
+        User::factory(1)->create();
     }
 }

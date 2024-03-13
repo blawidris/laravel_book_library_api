@@ -17,7 +17,9 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Book::class);
             $table->foreignIdFor(User::class);
-            $table->timestamps();
+            $table->timestamp('checkout_at');
+            $table->timestamp('checkin_at')->nullable();
+            // $table->timestamps();
         });
     }
 

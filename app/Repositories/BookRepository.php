@@ -4,6 +4,8 @@ namespace App\Repositories;
 
 use App\Models\Author;
 use App\Models\Book;
+use App\Models\User;
+use Exception;
 
 class BookRepository
 {
@@ -43,5 +45,32 @@ class BookRepository
         $book = $this->show($book);
 
         return $book->delete() ? true : false;
+    }
+
+    public function checkout(Book $book, User $user)
+    {
+        return $book->reservations()->create([
+            'user_id' => $user->id,
+            'checkout_at' => now()
+        ]);
+    }
+
+    public function checkin(Book $book, User $user)
+    {
+        $reservation =  $book->reservations()
+            ->where('user_id', $user->id)
+            ->whereNotNull('checkout_at')
+            ->whereNull('checkin_at')
+            ->first();
+
+        if (is_null($reservation)) {
+            throw new Exception('Reservation not found');
+        }
+
+        return $reservation->update([
+            'checkin_at' => now()
+        ]);
+
+        // return $reservation;
     }
 }
