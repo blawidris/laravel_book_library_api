@@ -23,7 +23,7 @@ class BookReservationTest extends TestCase
         $this->assertCount(1, Reservation::all());
         $this->assertEquals($book['id'], Reservation::first()->book_id);
         $this->assertEquals($user['id'], Reservation::first()->user_id);
-        // $this->assertEquals(now(), Reservation::first()['checkout_at']);
+        $this->assertEquals(now(), Reservation::first()->checkout_at);
     }
 
     public function test_only_signed_in_users_can_checkout_a_book()
@@ -44,5 +44,22 @@ class BookReservationTest extends TestCase
             ->assertStatus(404);
 
         $this->assertCount(0, Reservation::all());
+    }
+
+
+    public function test_a_book_can_be_checked_in_by_a_signed_in_user()
+    {
+        $this->withoutExceptionHandling();
+
+        $book = Book::factory()->create();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/checkout/' . $book['id']);
+
+        $this->actingAs($user)->put('/checkin/' . $book['id']);
+
+        $this->assertCount(1, Reservation::all());
+        $this->assertEquals($book['id'], Reservation::first()->book_id);
+        $this->assertEquals(now(), Reservation::first()->checkin_at);
     }
 }

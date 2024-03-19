@@ -13,11 +13,19 @@ class CheckoutBookController extends Controller
     {
         $this->middleware('auth');
     }
-    
+
     public function store(Book $book, BookRepository $repository)
     {
         $checkout = $repository->checkout($book, Auth::user());
 
         return $checkout;
+    }
+
+    public function update($book, BookRepository $repository){
+        $book = $repository->show($book);
+
+        $checkInBook = $repository->checkin($book, Auth::user());
+
+        return $checkInBook;
     }
 }

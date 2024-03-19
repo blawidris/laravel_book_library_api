@@ -24,3 +24,4 @@ Route::post('login', [LoginController::class, 'login']);
 Route::resource('books', BookController::class);
 Route::resource('author', AuthorController::class);
 Route::post('checkout/{book}', [CheckoutBookController::class, 'store']);
+Route::put('checkin/{book}', [CheckoutBookController::class, 'update']);
