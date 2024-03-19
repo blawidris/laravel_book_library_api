@@ -2,113 +2,47 @@
 
 namespace Tests\Feature;
 
-use App\Models\Author;
 use App\Models\Book;
+use App\Models\Reservation;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class BookReservationTest extends TestCase
 {
-
     use RefreshDatabase;
 
-    /**
-     * A basic feature test example.
-     */
-    public function test_add_book_to_the_library_collection(): void
-    {
-        $response = $this->post('/books', [
-            'title' => 'Atomic Habit',
-            'author' => 'Kendrick Arnold'
-        ]);
-
-        $response->assertStatus(201);
-
-        $this->assertCount(1, Book::all());
-
-        // $response->assertRedirect('/books/'. $response['id']);
-    }
-
-    public function test_is_title_required()
+    public function test_a_book_can_be_checked_out_by_signed_in_user(): void
     {
 
-        $response = $this->post('/books', [
-            'title' => '',
-            'author' => 'Kendrick Arnold'
-        ]);
+        $book = Book::factory()->create();
 
-        $response->assertSessionHasErrors('title');
+        $this->actingAs($user = User::factory()->create())->post('/checkout/' . $book['id']);
+
+        $this->assertCount(1, Reservation::all());
+        $this->assertEquals($book['id'], Reservation::first()->book_id);
+        $this->assertEquals($user['id'], Reservation::first()->user_id);
+        // $this->assertEquals(now(), Reservation::first()['checkout_at']);
     }
 
-    public function test_is_author_required()
-    {
-
-        $response = $this->post('/books', [
-            'title' => 'Rich Dad Poor Dad',
-            'author' => ''
-        ]);
-
-        $response->assertSessionHasErrors('author');
-    }
-
-    public function test_update_book_in_library_collection()
+    public function test_only_signed_in_users_can_checkout_a_book()
     {
         // $this->withoutExceptionHandling();
 
-        $storeNewBook = $this->post('/books', [
-            'title' => 'New Book',
-            'author' => 'New Book author'
-        ]);
+        $book = Book::factory()->create();
+        $this->post('/checkout/' . $book['id'])
+            ->assertRedirect('/login');
 
-
-
-        $response = $this->patch("/books/{$storeNewBook['id']}", [
-            'title' => 'Rich Dad Poor Dad',
-            'author' => 'Robert K'
-        ]);
-
-        // dd($response);
-
-        $this->assertEquals('Rich Dad Poor Dad', $response['title']);
-        $this->assertEquals('Robert K', $response['author']['name']);
-
-        // $response->assertRedirect('/books/'.$response['id']);
+        $this->assertCount(0, Reservation::all());
     }
 
-    public function test_book_can_be_deleted()
+    public function test_only_existing_book_can_be_booked()
     {
+        $this->actingAs($user = User::factory()->create())
+            ->post('/checkout/12')
+            ->assertStatus(404);
 
-        $storeNewBook = $this->post('/books', [
-            'title' => 'Lemanord',
-            'author' => 'Kendrick Arnold'
-        ]);
-
-        $response = $this->delete("/books/{$storeNewBook['id']}");
-
-        $this->assertCount(0, Book::all());
-
-        $response->assertRedirect('/books');
+        $this->assertCount(0, Reservation::all());
     }
-
-
-    public function test_a_new_author_is_automatically_added()
-    {
-
-        $this->withoutExceptionHandling();
-
-        $storeNewBook = $this->post('/books', [
-            'title' => 'Riches man in Babylon',
-            'author' => 'Arnold'
-        ]);
-
-
-        $author = Author::first();
-
-
-        $this->assertCount(1, Author::all());
-        $this->assertEquals($author->id, $storeNewBook['author_id']);
-    }
-
-    public function test_book_checkout(){}
 }
