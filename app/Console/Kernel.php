@@ -12,7 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('message:daily')->everyMinute()->appendOutputTo('schedule.log');
+        $schedule->command('app:publish-post')->everyMinute();
+    }
+
+    public function scheduleTimezone(){
+        return 'America/Los_Angeles';
     }
 
     /**
