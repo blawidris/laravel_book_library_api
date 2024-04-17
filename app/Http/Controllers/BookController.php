@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\DB;
 class BookController extends Controller
 {
 
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
         return Book::all();
